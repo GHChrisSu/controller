@@ -63,6 +63,8 @@ dependencies {
   // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native"
+  implementation "com.aromajoin.sdk:core:2.5.2"
+  implementation "com.aromajoin.sdk:android:2.4.6"
 }
 
 if (isNewArchitectureEnabled()) {

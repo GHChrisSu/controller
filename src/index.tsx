@@ -17,6 +17,6 @@ const Controller = NativeModules.Controller
       }
     );
 
-export function multiply(a: number, b: number): Promise<number> {
-  return Controller.multiply(a, b);
+export function diffuse(ports: number[]): Promise<void> {
+  return Controller.diffuse(ports);
 }
