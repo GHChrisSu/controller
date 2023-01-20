@@ -1,5 +1,5 @@
 {
-  "name": "controller",
+  "name": "aromajoin_controller",
   "version": "0.1.0",
   "description": "test",
   "main": "lib/commonjs/index",
