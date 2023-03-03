@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { diffuse } from 'controller';
+import { StyleSheet, View, Text, Button } from 'react-native';
+import { diffuse } from 'aromajoin_controller';
 
 export default function App() {
   React.useEffect(() => {
@@ -11,6 +11,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text>Result:</Text>
+      <Button title="Diffuse" onPress={() => diffuse([0])} />
     </View>
   );
 }
