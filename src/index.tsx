@@ -20,3 +20,7 @@ const Controller = NativeModules.Controller
 export function diffuse(ports: number[]): Promise<void> {
   return Controller.diffuse(ports);
 }
+
+export function deviceList(): Promise<void> {
+  return Controller.deviceList();
+}
