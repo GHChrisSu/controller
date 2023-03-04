@@ -43,7 +43,7 @@ export default function App() {
   };
   const onPlay = async () => {
     console.info('[onPlay start ]');
-    const result = await Controller.play();
+    const result = await Controller.play(1000,50,200,"1|30,2|40");
     console.info('[onPlay result]', result);
   };
 
