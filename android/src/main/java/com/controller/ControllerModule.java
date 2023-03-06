@@ -1,10 +1,28 @@
 package com.controller;
 
 
+import static androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale;
+
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+
+import androidx.core.content.ContextCompat;
+
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.alibaba.fastjson.JSON;
 import com.aromajoin.sdk.android.ble.AndroidBLEController;
@@ -22,6 +40,7 @@ import com.facebook.react.module.annotations.ReactModule;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -35,8 +54,12 @@ public class ControllerModule extends ReactContextBaseJavaModule {
 
   private final Map<String, AromaShooter> aromaShooterMap = new HashMap<>();
 
-  private final int  DEFAULT_BOO_INTENSITY = 50;
-  private final int DEFAULT_FAN_INTENSITY = 50;
+  private static final int DEFAULT_BOO_INTENSITY = 50;
+  private static final int DEFAULT_FAN_INTENSITY = 50;
+
+  private static final int ACCESS_COARSE_LOCATION_REQUEST_CODE = 1;
+
+  private Promise permissionPromise;
 
   private final ExecutorService executor;
 
@@ -83,6 +106,26 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   }
 
 
+  @ReactMethod
+  public void checkPermission(Promise promise) {
+    if (ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+      promise.resolve(1);
+      return;
+    }
+    this.permissionPromise = promise;
+    ActivityCompat.requestPermissions(Objects.requireNonNull(getCurrentActivity()), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, ACCESS_COARSE_LOCATION_REQUEST_CODE);
+  }
+
+
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    if (requestCode == ACCESS_COARSE_LOCATION_REQUEST_CODE) {
+      permissionPromise.resolve(1);
+    } else {
+      permissionPromise.resolve(-1);
+    }
+  }
+
+
   /**
    * 只需要调用一次，让sdk发起扫描可用设备
    *
@@ -91,12 +134,17 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void deviceList(Promise promise) {
     AndroidBLEController bleController = AndroidBLEController.getInstance();
-    executor.execute(() -> bleController.startScan(reactContext, aromaShooters -> {
-      if (aromaShooters != null && aromaShooters.size() > 0) {
-        aromaShooters.forEach(item -> aromaShooterMap.put(item.getSerial(), item));
-        promise.resolve(JSON.toJSONString(aromaShooters.stream().map(AromaShooter::getSerial).collect(Collectors.toList())));
-      }
-    }));
+    try {
+      executor.execute(() -> bleController.startScan(reactContext, aromaShooters -> {
+        if (aromaShooters != null && aromaShooters.size() > 0) {
+          aromaShooters.forEach(item -> aromaShooterMap.put(item.getSerial(), item));
+          promise.resolve(JSON.toJSONString(aromaShooters.stream().map(AromaShooter::getSerial).collect(Collectors.toList())));
+        }
+      }));
+    } catch (SecurityException exception) {
+      promise.resolve(-1);
+    }
+
 
   }
 
