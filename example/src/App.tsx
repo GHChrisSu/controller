@@ -1,11 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   checkBluetooth,
   checkPermission,
@@ -15,7 +10,7 @@ import {
   disConnectDevice,
   play,
   stop,
-} from 'aromajoin_controller';
+} from 'controller';
 
 export default function App() {
   const [serial, setSerial] = useState('');

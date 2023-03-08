@@ -9,8 +9,6 @@
     "pods": "pod-install --quiet"
   },
   "dependencies": {
-    "aromajoin_controller": "../",
-    "controller": "^1.0.0",
     "react": "18.2.0",
     "react-native": "0.71.0"
   },
