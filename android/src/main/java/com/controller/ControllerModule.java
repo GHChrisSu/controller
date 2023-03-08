@@ -160,6 +160,12 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   }
 
 
+  @ReactMethod
+  public void clearDeviceCacheList(Promise promise) {
+    aromaShooterMap.clear();
+    promise.resolve(1);
+  }
+
   /**
    * 链接设备
    *

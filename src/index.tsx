@@ -33,6 +33,10 @@ export function deviceCacheList(): Promise<any> {
   return Controller.deviceCacheList();
 }
 
+export function clearDeviceCacheList(): Promise<any> {
+  return Controller.clearDeviceCacheList();
+}
+
 export function connectDevice(serial: string): Promise<any> {
   return Controller.connectDevice(serial);
 }
