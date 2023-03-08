@@ -10,7 +10,7 @@ import {
   disConnectDevice,
   play,
   stop,
-} from 'controller';
+} from 'aromajoin_controller';
 
 export default function App() {
   const [serial, setSerial] = useState('');
