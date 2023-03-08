@@ -2,20 +2,21 @@
 
 Aromajoin
 
-## Installation
-
-```sh
-npm install controller
-```
-
 ## Usage
 
 ```js
-import { multiply } from 'controller';
-
+import {
+  checkBluetooth,
+  checkPermission,
+  deviceList,
+  deviceCacheList,
+  connectDevice,
+  disConnectDevice,
+  play,
+  stop,
+} from 'aromajoin_controller';
 // ...
 
-const result = await multiply(3, 7);
 ```
 
 ## Contributing
