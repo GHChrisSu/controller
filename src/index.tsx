@@ -17,10 +17,53 @@ const Controller = NativeModules.Controller
       }
     );
 
-export function diffuse(ports: number[]): Promise<void> {
-  return Controller.diffuse(ports);
+export function checkBluetooth(): Promise<number> {
+  return Controller.checkBluetooth();
 }
 
-export function deviceList(): Promise<void> {
+export function checkPermission(): Promise<number> {
+  return Controller.checkPermission();
+}
+
+export function deviceList(): Promise<number> {
   return Controller.deviceList();
+}
+
+export function deviceCacheList(): Promise<number> {
+  return Controller.deviceCacheList();
+}
+
+export function connectDevice(serial: string): Promise<number> {
+  return Controller.connectDevice(serial);
+}
+
+export function disConnectDevice(serial: string): Promise<number> {
+  return Controller.connectDevice(serial);
+}
+
+/**
+ * 开始喷射香水
+ *
+ * @param duration         持续时间
+ * @param boosterIntensity 喷射强度
+ * @param fanIntensity     风扇强度
+ * @param portTemplate     格式：portNumber|intensity,portNumber|intensity
+ * @param promise          回调
+ */
+export function play(
+  duration: number,
+  boosterIntensity: number,
+  fanIntensity: number,
+  portTemplate: string
+): Promise<number> {
+  return Controller.play(
+    duration,
+    boosterIntensity,
+    fanIntensity,
+    portTemplate
+  );
+}
+
+export function stop(serial: string): Promise<number> {
+  return Controller.stop(serial);
 }

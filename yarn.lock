@@ -2551,6 +2551,11 @@
   "resolved" "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz"
   "version" "2.0.1"
 
+"aromajoin_controller@^0.1.1":
+  "integrity" "sha512-xqG1IBR12WkcrE5Km3cDR+Aal8z3n20reWoXQEXf7Erk+cFn3CsQlNqW8b4ft1mRc9Gn5nxaISK77FFf2p2kOQ=="
+  "resolved" "https://registry.npmjs.org/aromajoin_controller/-/aromajoin_controller-0.1.1.tgz"
+  "version" "0.1.1"
+
 "arr-diff@^4.0.0":
   "integrity" "sha512-YVIQ82gZPGBebQV/a8dar4AitzCQs0jjXwMPZllpXMaGjXPYVUawSxQrRsjhjupyVxEvbHgUmIhKVlND+j02kA=="
   "resolved" "https://registry.npmjs.org/arr-diff/-/arr-diff-4.0.0.tgz"

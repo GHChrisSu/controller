@@ -1,15 +1,21 @@
 import * as React from 'react';
 import { useState } from 'react';
 import {
-  Button,
-  NativeModules,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-
-const Controller = NativeModules.Controller;
+import {
+  checkBluetooth,
+  checkPermission,
+  deviceList,
+  deviceCacheList,
+  connectDevice,
+  disConnectDevice,
+  play,
+  stop,
+} from 'aromajoin_controller';
 
 export default function App() {
   const [serial, setSerial] = useState('');
@@ -17,21 +23,21 @@ export default function App() {
 
   const onCheckBluetooth = async () => {
     console.info('[onCheckBluetooth start ]');
-    const state = await Controller.checkBluetooth();
+    const state = await checkBluetooth();
     setResult(state);
     console.info('[onCheckBluetooth result]', state);
   };
 
   const onCheckPermission = async () => {
     console.info('[onCheckPermission start ]');
-    const state = await Controller.checkPermission();
+    const state = await checkPermission();
     setResult(state);
     console.info('[onCheckPermission result]', state);
   };
 
   const onDeviceList = async () => {
     console.info('[onDeviceList start ]');
-    const state = await Controller.deviceList();
+    const state = await deviceList();
     const array = JSON.parse(state.toString());
     setResult(array);
     console.info('[onDeviceList result]', array);
@@ -40,27 +46,33 @@ export default function App() {
 
   const onDeviceCacheList = async () => {
     console.info('[onDeviceCacheList start ]');
-    const state = await Controller.deviceCacheList();
+    const state = await deviceCacheList();
     setResult(state);
     console.info('[onDeviceCacheList result]', state, serial);
   };
 
   const onConnectDevice = async () => {
     console.info('[onConnectDevice start ]');
-    const state = await Controller.connectDevice(serial);
+    const state = await connectDevice(serial);
     setResult(state);
     console.info('[onConnectDevice state]', state);
   };
   const onPlay = async () => {
     console.info('[onPlay start ]');
-    const state = await Controller.play(1000, 50, 200, '1|30,2|40');
+    const state = await play(1000, 50, 200, '1|30,2|40');
+    setResult(state);
+    console.info('[onPlay result]', state);
+  };
+  const onStop = async () => {
+    console.info('[onPlay start ]');
+    const state = await stop(serial);
     setResult(state);
     console.info('[onPlay result]', state);
   };
 
   const onDisConnectDevice = async () => {
     console.info('[onDisConnectDevice start ]');
-    const state = await Controller.disConnectDevice(serial);
+    const state = await disConnectDevice(serial);
     setResult(state);
     console.info('[onDisConnectDevice result]', state);
   };
@@ -104,14 +116,16 @@ export default function App() {
         <Text style={styles.textColor}>播放(play)</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity onPress={() => onStop()} style={styles.button}>
+        <Text style={styles.textColor}>播放(stop)</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
         onPress={() => onDisConnectDevice()}
         style={styles.button}
       >
         <Text style={styles.textColor}>断开链接(disConnectDevice)</Text>
       </TouchableOpacity>
-
-      <Button title="Diffuse" onPress={() => onList()} />
     </View>
   );
 }
@@ -148,7 +162,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   textColor: {
-    color: white,
+    color: 'white',
   },
   resultText: {
     padding: 10,
