@@ -166,6 +166,17 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     promise.resolve(1);
   }
 
+  @ReactMethod
+  public void stopScan(Promise promise) {
+    try {
+      AndroidBLEController bleController = AndroidBLEController.getInstance();
+      bleController.stopScan(reactContext);
+      promise.resolve(1);
+    } catch (Exception exception) {
+      promise.resolve(-1);
+    }
+  }
+
   /**
    * 链接设备
    *

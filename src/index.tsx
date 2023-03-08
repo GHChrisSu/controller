@@ -41,6 +41,10 @@ export function connectDevice(serial: string): Promise<any> {
   return Controller.connectDevice(serial);
 }
 
+export function stopScan(): Promise<any> {
+  return Controller.stopScan();
+}
+
 export function disConnectDevice(serial: string): Promise<any> {
   return Controller.disConnectDevice(serial);
 }
