@@ -112,7 +112,7 @@ export default function App() {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => onStop()} style={styles.button}>
-        <Text style={styles.textColor}>播放(stop)</Text>
+        <Text style={styles.textColor}>停止播放(stop)</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     borderRadius: 10,
-    borderColor: 'white',
+    borderColor: 'red',
     borderWidth: 2,
     width: '80%',
     minHeight: 100,

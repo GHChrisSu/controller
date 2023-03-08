@@ -17,28 +17,28 @@ const Controller = NativeModules.Controller
       }
     );
 
-export function checkBluetooth(): Promise<number> {
+export function checkBluetooth(): Promise<any> {
   return Controller.checkBluetooth();
 }
 
-export function checkPermission(): Promise<number> {
+export function checkPermission(): Promise<any> {
   return Controller.checkPermission();
 }
 
-export function deviceList(): Promise<number> {
+export function deviceList(): Promise<any> {
   return Controller.deviceList();
 }
 
-export function deviceCacheList(): Promise<number> {
+export function deviceCacheList(): Promise<any> {
   return Controller.deviceCacheList();
 }
 
-export function connectDevice(serial: string): Promise<number> {
+export function connectDevice(serial: string): Promise<any> {
   return Controller.connectDevice(serial);
 }
 
-export function disConnectDevice(serial: string): Promise<number> {
-  return Controller.connectDevice(serial);
+export function disConnectDevice(serial: string): Promise<any> {
+  return Controller.disConnectDevice(serial);
 }
 
 /**
@@ -48,14 +48,13 @@ export function disConnectDevice(serial: string): Promise<number> {
  * @param boosterIntensity 喷射强度
  * @param fanIntensity     风扇强度
  * @param portTemplate     格式：portNumber|intensity,portNumber|intensity
- * @param promise          回调
  */
 export function play(
   duration: number,
   boosterIntensity: number,
   fanIntensity: number,
   portTemplate: string
-): Promise<number> {
+): Promise<any> {
   return Controller.play(
     duration,
     boosterIntensity,
@@ -64,6 +63,6 @@ export function play(
   );
 }
 
-export function stop(serial: string): Promise<number> {
+export function stop(serial: string): Promise<any> {
   return Controller.stop(serial);
 }
