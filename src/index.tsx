@@ -74,3 +74,19 @@ export function play(
 export function stop(serial: string): Promise<any> {
   return Controller.stop(serial);
 }
+
+export function submitFormula(formulaJson: string): Promise<any> {
+  return Controller.submitFormula(formulaJson);
+}
+
+export function playFormula(): Promise<any> {
+  return Controller.playFormula();
+}
+
+export function stopFormula(): Promise<any> {
+  return Controller.stopFormula();
+}
+
+export function getFormulaTime(): Promise<any> {
+  return Controller.getFormulaTime();
+}

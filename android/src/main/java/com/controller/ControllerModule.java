@@ -1,24 +1,11 @@
 package com.controller;
 
 
-import static androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale;
-
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-
-import androidx.core.content.ContextCompat;
-
-import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -30,19 +17,23 @@ import com.aromajoin.sdk.core.callback.ConnectCallback;
 import com.aromajoin.sdk.core.callback.DisconnectCallback;
 import com.aromajoin.sdk.core.device.AromaShooter;
 import com.aromajoin.sdk.core.device.Port;
+import com.controller.model.Formula;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.module.annotations.ReactModule;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @ReactModule(name = ControllerModule.NAME)
@@ -61,14 +52,23 @@ public class ControllerModule extends ReactContextBaseJavaModule {
 
   private Promise permissionPromise;
 
-  private final ExecutorService executor;
+  private final static List<Formula> currentPortFormulas = new ArrayList<>();
 
+
+  public static AtomicBoolean play = new AtomicBoolean(false);
+
+  public static int currentTime = 0;
+
+  public static int totalTime;
+
+  private static ScheduledExecutorService scheduledExecutor;
+
+  private ScheduledFuture<?> scheduledFuture;
 
   public ControllerModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
-    executor = Executors.newSingleThreadScheduledExecutor();
-
+    scheduledExecutor = Executors.newScheduledThreadPool(2);
   }
 
   @Override
@@ -102,7 +102,6 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     } catch (SecurityException exception) {
       promise.reject("ERROR", "请允许蓝牙权限");
     }
-
   }
 
 
@@ -135,7 +134,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   public void deviceList(Promise promise) {
     AndroidBLEController bleController = AndroidBLEController.getInstance();
     try {
-      executor.execute(() -> bleController.startScan(reactContext, aromaShooters -> {
+      scheduledExecutor.execute(() -> bleController.startScan(reactContext, aromaShooters -> {
         if (aromaShooters != null && aromaShooters.size() > 0) {
           aromaShooters.forEach(item -> aromaShooterMap.put(item.getSerial(), item));
           promise.resolve(JSON.toJSONString(aromaShooters.stream().map(AromaShooter::getSerial).collect(Collectors.toList())));
@@ -195,7 +194,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     }
     bleController.stopScan(reactContext);
 
-    executor.execute(() -> bleController.connect(aromaShooter, new ConnectCallback() {
+    scheduledExecutor.execute(() -> bleController.connect(aromaShooter, new ConnectCallback() {
       @Override
       public void onConnected(AromaShooter aromaShooter1) {
         promise.resolve(1);
@@ -228,7 +227,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     }
     bleController.stopScan(reactContext);
 
-    executor.execute(() -> bleController.disconnect(aromaShooter, new DisconnectCallback() {
+    scheduledExecutor.execute(() -> bleController.disconnect(aromaShooter, new DisconnectCallback() {
       @Override
       public void onDisconnect(AromaShooter aromaShooter1) {
         promise.resolve(1);
@@ -242,6 +241,87 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     }));
 
 
+  }
+
+
+  /**
+   * 提交配方
+   *
+   * @param formulaJson 配方json
+   */
+  @ReactMethod
+  public void submitFormula(String formulaJson) {
+    AndroidBLEController bleController = AndroidBLEController.getInstance();
+    currentPortFormulas.clear();
+    currentPortFormulas.addAll(JSON.parseArray(formulaJson, Formula.class));
+    for (Formula formula : currentPortFormulas) {
+      int v = formula.getDuration() + formula.getStart() * 1000;
+      totalTime = Math.max(v, totalTime);
+    }
+    if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+      return;
+    }
+    currentTime = 0;
+    scheduledFuture = scheduledExecutor.scheduleAtFixedRate(() -> {
+      try {
+        if (!play.get()) return;
+        List<Formula> choiceFormulas = currentPortFormulas.stream().filter(item -> item.getStart() * 1000 == currentTime).collect(Collectors.toList());
+        for (Formula item : choiceFormulas) {
+          currentPortFormulas.remove(item);
+          Port[] ports = Utility.convertToPort(item.getCartridge() + "|" + item.getValue());
+          bleController.diffuseAll(item.getDuration(), DEFAULT_BOO_INTENSITY, DEFAULT_FAN_INTENSITY, ports);
+          Log.i("submitFormula", "开始执行任务" + item + "剩余任务数量" + currentPortFormulas.size());
+        }
+        currentTime += 50;
+        if (currentTime > totalTime) {
+          currentTime = totalTime;
+          play.set(false);
+          Log.i("submitFormula", "配方播放完成");
+          if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+          }
+        }
+      } catch (Exception e) {
+        Log.e("submitFormula", "submitFormula: " + e.getMessage());
+      }
+    }, 0, 50, TimeUnit.MILLISECONDS);
+
+  }
+
+
+  /**
+   * 播放配方
+   *
+   * @param promise
+   */
+  @ReactMethod
+  public void playFormula(Promise promise) {
+    if (currentTime >= totalTime) {
+      promise.resolve(-1);
+      return;
+    }
+    play.set(true);
+    promise.resolve(currentTime);
+  }
+
+  /**
+   * 停止配方播放
+   *
+   * @param promise
+   */
+  @ReactMethod
+  public void stopFormula(Promise promise) {
+    if (currentTime >= totalTime) {
+      promise.resolve(-1);
+      return;
+    }
+    play.set(false);
+    promise.resolve(currentTime);
+  }
+
+  @ReactMethod
+  public void getFormulaTime(Promise promise) {
+    promise.resolve(currentTime);
   }
 
 
@@ -286,6 +366,9 @@ public class ControllerModule extends ReactContextBaseJavaModule {
    */
   @ReactMethod
   public void stop(String serial, Promise promise) {
+    if (scheduledFuture != null) {
+      scheduledFuture.cancel(true);
+    }
     AndroidBLEController bleController = AndroidBLEController.getInstance();
     AromaShooter aromaShooter = aromaShooterMap.get(serial);
     if (aromaShooter == null) {
@@ -296,17 +379,4 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   }
 
 
-  // Example method
-  // See https://reactnative.dev/docs/native-modules-android
-  @ReactMethod
-  public void diffuse(ReadableArray ports, Promise promise) {
-    AndroidBLEController bleController = AndroidBLEController.getInstance();
-    List<AromaShooter> aromaShooters = bleController.getConnectedDevices();
-    if (aromaShooters == null || aromaShooters.size() == 0) { // check whether there is any connected devices.
-      promise.reject(new Exception("No connected devices"));
-      return;
-    }
-    bleController.diffuseAll(DEFAULT_DURATION, true, Utility.convertToIntArray(ports));
-    promise.resolve(null);
-  }
 }
