@@ -7,6 +7,16 @@ public class Formula implements Comparable {
   private int cartridge;
   private int value;
 
+  private int fan;
+
+  public int getFan() {
+    return fan;
+  }
+
+  public void setFan(int fan) {
+    this.fan = fan;
+  }
+
   public int getStart() {
     return start;
   }

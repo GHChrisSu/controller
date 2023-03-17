@@ -265,11 +265,14 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     scheduledFuture = scheduledExecutor.scheduleAtFixedRate(() -> {
       try {
         if (!play.get()) return;
-        List<Formula> choiceFormulas = currentPortFormulas.stream().filter(item -> item.getStart() * 1000 == currentTime).collect(Collectors.toList());
+        List<Formula> choiceFormulas = currentPortFormulas.stream().filter(item -> item.getStart() == currentTime).collect(Collectors.toList());
         for (Formula item : choiceFormulas) {
           currentPortFormulas.remove(item);
           Port[] ports = Utility.convertToPort(item.getCartridge() + "|" + item.getValue());
-          bleController.diffuseAll(item.getDuration(), DEFAULT_BOO_INTENSITY, DEFAULT_FAN_INTENSITY, ports);
+          int fanIntensity = item.getFan();
+          if (fanIntensity == 0) fanIntensity = DEFAULT_FAN_INTENSITY;
+          if (fanIntensity > 100) fanIntensity = 100;
+          bleController.diffuseAll(item.getDuration(), DEFAULT_BOO_INTENSITY, fanIntensity, ports);
           Log.i("submitFormula", "开始执行任务" + item + "剩余任务数量" + currentPortFormulas.size());
         }
         currentTime += 50;
