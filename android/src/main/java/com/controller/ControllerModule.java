@@ -255,7 +255,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     currentPortFormulas.clear();
     currentPortFormulas.addAll(JSON.parseArray(formulaJson, Formula.class));
     for (Formula formula : currentPortFormulas) {
-      int v = formula.getDuration() + formula.getStart() * 1000;
+      int v = formula.getDuration() + formula.getStart();
       totalTime = Math.max(v, totalTime);
     }
     if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
