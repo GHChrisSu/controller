@@ -90,3 +90,7 @@ export function stopFormula(): Promise<any> {
 export function getFormulaTime(): Promise<any> {
   return Controller.getFormulaTime();
 }
+
+export function resetPlay(): Promise<any> {
+  return Controller.resetPlay();
+}
