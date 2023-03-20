@@ -323,6 +323,14 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void resetPlay(Promise promise) {
+    if (scheduledFuture != null) {
+      scheduledFuture.cancel(true);
+    }
+    currentTime = 0;
+  }
+
+  @ReactMethod
   public void getFormulaTime(Promise promise) {
     promise.resolve(currentTime);
   }
