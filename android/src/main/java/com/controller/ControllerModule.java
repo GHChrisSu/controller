@@ -113,6 +113,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     }
     this.permissionPromise = promise;
     ActivityCompat.requestPermissions(Objects.requireNonNull(getCurrentActivity()), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, ACCESS_COARSE_LOCATION_REQUEST_CODE);
+    promise.resolve(1);
   }
 
 
@@ -140,6 +141,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
           promise.resolve(JSON.toJSONString(aromaShooters.stream().map(AromaShooter::getSerial).collect(Collectors.toList())));
         }
       }));
+      promise.resolve(1);
     } catch (SecurityException exception) {
       promise.resolve(-1);
     }
@@ -206,6 +208,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
 
       }
     }));
+    promise.resolve(1);
 
 
   }
@@ -239,7 +242,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
 
       }
     }));
-
+    promise.resolve(1);
 
   }
 
@@ -328,6 +331,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
       scheduledFuture.cancel(true);
     }
     currentTime = 0;
+    promise.resolve(currentTime);
   }
 
   @ReactMethod
@@ -387,6 +391,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
       return;
     }
     bleController.stopAllPorts(aromaShooter);
+    promise.resolve(1);
   }
 
 
