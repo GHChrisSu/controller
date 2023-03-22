@@ -141,7 +141,6 @@ public class ControllerModule extends ReactContextBaseJavaModule {
           promise.resolve(JSON.toJSONString(aromaShooters.stream().map(AromaShooter::getSerial).collect(Collectors.toList())));
         }
       }));
-      promise.resolve(1);
     } catch (SecurityException exception) {
       promise.resolve(-1);
     }
