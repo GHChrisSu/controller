@@ -256,10 +256,12 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     AndroidBLEController bleController = AndroidBLEController.getInstance();
     currentPortFormulas.clear();
     currentPortFormulas.addAll(JSON.parseArray(formulaJson, Formula.class));
+    int currentTotalTime = 0;
     for (Formula formula : currentPortFormulas) {
       int v = formula.getDuration() + formula.getStart();
-      totalTime = Math.max(v, totalTime);
+      currentTotalTime = Math.max(v, currentTotalTime);
     }
+    totalTime = currentTotalTime;
     if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
       return;
     }
@@ -329,6 +331,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     if (scheduledFuture != null) {
       scheduledFuture.cancel(true);
     }
+    currentPortFormulas.clear();
     currentTime = 0;
     promise.resolve(currentTime);
   }
