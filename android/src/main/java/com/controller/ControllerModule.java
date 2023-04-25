@@ -5,6 +5,7 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ import androidx.core.content.ContextCompat;
 
 import com.alibaba.fastjson.JSON;
 import com.aromajoin.sdk.android.ble.AndroidBLEController;
+import com.aromajoin.sdk.android.ble.ui.ASConnectionActivity;
 import com.aromajoin.sdk.core.callback.ConnectCallback;
 import com.aromajoin.sdk.core.callback.DisconnectCallback;
 import com.aromajoin.sdk.core.device.AromaShooter;
@@ -49,7 +51,8 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   private static final int DEFAULT_FAN_INTENSITY = 50;
 
   private static final int ACCESS_COARSE_LOCATION_REQUEST_CODE = 1;
-
+  private static final int ACCESS_COARSE_PERMISSION_REQUEST = 10001;
+  private static final int REQUEST_BLUETOOTH_ENABLE = 101;
   private Promise permissionPromise;
 
   private final static List<Formula> currentPortFormulas = new ArrayList<>();
@@ -107,13 +110,49 @@ public class ControllerModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void checkPermission(Promise promise) {
-    if (ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+    this.permissionPromise = promise;
+    // From Android 12
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      if ((ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.BLUETOOTH_SCAN)
+        != PackageManager.PERMISSION_GRANTED) &&
+        (ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT)
+          != PackageManager.PERMISSION_GRANTED)) {
+        ActivityCompat.requestPermissions(Objects.requireNonNull(getCurrentActivity()),
+          new String[] {
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT
+          },
+          ACCESS_COARSE_PERMISSION_REQUEST);
+
+        promise.resolve(1);
+        return;
+      } else {
+        Log.d("aa", "Permission is granted");
+        promise.resolve(0);
+        return;
+      }
+    }
+
+    // For Android 11 and lower
+    if ((ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+      != PackageManager.PERMISSION_GRANTED) &&
+      (ContextCompat.checkSelfPermission(getReactApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+        != PackageManager.PERMISSION_GRANTED)) {
+
+      ActivityCompat.requestPermissions(Objects.requireNonNull(getCurrentActivity()),
+        new String[] {
+          Manifest.permission.ACCESS_COARSE_LOCATION,
+          Manifest.permission.ACCESS_FINE_LOCATION
+        },
+        ACCESS_COARSE_PERMISSION_REQUEST);
+
       promise.resolve(1);
       return;
+    } else {
+      Log.d("TAG", "Permission is granted");
+      promise.resolve(0);
+      return;
     }
-    this.permissionPromise = promise;
-    ActivityCompat.requestPermissions(Objects.requireNonNull(getCurrentActivity()), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, ACCESS_COARSE_LOCATION_REQUEST_CODE);
-    promise.resolve(1);
   }
 
 
@@ -121,7 +160,7 @@ public class ControllerModule extends ReactContextBaseJavaModule {
     if (requestCode == ACCESS_COARSE_LOCATION_REQUEST_CODE) {
       permissionPromise.resolve(1);
     } else {
-      permissionPromise.resolve(-1);
+      permissionPromise.resolve(0);
     }
   }
 
@@ -134,18 +173,24 @@ public class ControllerModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void deviceList(Promise promise) {
     AndroidBLEController bleController = AndroidBLEController.getInstance();
-    try {
-      scheduledExecutor.execute(() -> bleController.startScan(reactContext, aromaShooters -> {
-        if (aromaShooters != null && aromaShooters.size() > 0) {
-          aromaShooters.forEach(item -> aromaShooterMap.put(item.getSerial(), item));
-          promise.resolve(JSON.toJSONString(aromaShooters.stream().map(AromaShooter::getSerial).collect(Collectors.toList())));
-        }
-      }));
-    } catch (SecurityException exception) {
-      promise.resolve(-1);
+
+    //Get connected device list
+    List<AromaShooter> aromaShooters = bleController.getConnectedDevices();
+    if (aromaShooters != null && aromaShooters.size() > 0) {
+      Log.d("TAG", JSON.toJSONString(aromaShooters));
+      promise.resolve(JSON.toJSONString(aromaShooters));
+    } else {
+      if (bleController.checkBluetoothSupport(reactContext)) {
+        scheduledExecutor.execute(() -> bleController.startScan(reactContext, shooters -> {
+          if(shooters.size()>0) {
+            shooters.forEach(item -> aromaShooterMap.put(item.getSerial(), item));
+            promise.resolve(JSON.toJSONString(shooters.stream().map(AromaShooter::getSerial).collect(Collectors.toList())));
+          }
+        }));
+      } else {
+        permissionPromise.reject("aromajoin", "Bluetooth invalid");
+      }
     }
-
-
   }
 
 
